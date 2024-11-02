@@ -9,7 +9,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.server.blogbackend.Entity.LoginReq;
+import com.server.blogbackend.Entity.LoginResp;
 import com.server.blogbackend.Entity.User;
+import com.server.blogbackend.config.JsonWebToken;
 import com.server.blogbackend.service.UserService;
 
 @RestController
@@ -19,6 +22,8 @@ public class UserController {
     private UserService userservice;
     @Autowired
     private BCryptPasswordEncoder bc;
+    @Autowired
+    private JsonWebToken jwt;
 
     @PostMapping("/signup")
     public ResponseEntity<?> signUp(@RequestBody User u){
@@ -35,6 +40,22 @@ public class UserController {
             return ResponseEntity.badRequest().build();
         }
     }
-
-
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody LoginReq l ){
+        try{
+            User u = userservice.findOneByEmail(l.getEmail());
+            if(u != null){
+                if( bc.matches(l.getPassword(),u.getPassword() ) ){
+                    String MyToken = jwt.generateToken(u);
+                    return ResponseEntity.accepted().body(new LoginResp(MyToken));
+                }
+                return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).build();
+            } else {
+                return ResponseEntity.notFound().build();
+            }
+        }catch(Exception e){
+            return ResponseEntity.badRequest().build();
+            
+        }
+    }
 }

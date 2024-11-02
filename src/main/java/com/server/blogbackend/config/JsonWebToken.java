@@ -14,6 +14,7 @@ import com.server.blogbackend.Entity.User;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import org.json.JSONObject;
 
 @Component
 public class JsonWebToken {
@@ -35,18 +36,22 @@ public class JsonWebToken {
         byte[] keyBytes = Decoders.BASE64.decode(secretKey) ;
         return Keys.hmacShaKeyFor(keyBytes);
     }
-
     public String generateToken(User u) {
-        Map<String, Object> claims = new HashMap<String,Object>();
+        Map<String, Object> TokenProp = new HashMap<String,Object>();
+        
+        TokenProp.put("id", String.valueOf(u.getId()) );
+        TokenProp.put("fullname", u.getFullname());
+        TokenProp.put("email", u.getEmail());
         String r = Jwts.builder()
                     .claims()
-                    .add( claims )
-                    .subject(String.valueOf(u.getId()))
+                    .add( TokenProp )
+                    .subject( u.getEmail() )
                     .issuedAt(new Date(System.currentTimeMillis()))
                     .expiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
                     .and()
                     .signWith(this.getKey())
                     .compact();
+        System.out.println(r);
         return r;
     }
 }
